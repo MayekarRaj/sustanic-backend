@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  qrCode    String   @unique @map("qr_code")
+  name      String
+  phone     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  authSessions    AuthSession[]
+  wallet          Wallet?
+  dispenseRequests DispenseRequest[]
+  transactions    Transaction[]
+
+  @@map("users")
+}
+
+model AuthSession {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  jwtToken  String   @map("jwt_token")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_sessions")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  balance   Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model WaterQualityLog {
+  id         String   @id @default(uuid())
+  ph         Float
+  tds        Float    @map("tds")
+  turbidity  Float
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("water_quality_logs")
+}
+
+model DispenseRequest {
+  id          String            @id @default(uuid())
+  userId      String            @map("user_id")
+  quantityMl  Int               @map("quantity_ml")
+  status      DispenseStatus    @default(PENDING)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  completedAt DateTime?         @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dispense_requests")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  amount      Int
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+enum DispenseStatus {
+  PENDING
+  DISPENSING
+  COMPLETED
+  FAILED
+}
+
