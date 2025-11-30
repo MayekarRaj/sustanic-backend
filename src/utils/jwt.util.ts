@@ -3,9 +3,13 @@ import { config } from '../config/env';
 import { JWTPayload } from '../middleware/auth.middleware';
 
 export const generateToken = (payload: JWTPayload): string => {
-  return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
-  });
+  return jwt.sign(
+    payload,
+    config.jwt.secret,
+    {
+      expiresIn: config.jwt.expiresIn,
+    } as jwt.SignOptions
+  );
 };
 
 export const verifyToken = (token: string): JWTPayload => {
